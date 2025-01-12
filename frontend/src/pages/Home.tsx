@@ -14,12 +14,6 @@ interface Article {
   }>;
 }
 
-interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message?: string;
-}
-
 export default function Home() {
   const [url, setUrl] = useState('');
   const [articles, setArticles] = useState<Article[]>([]);
