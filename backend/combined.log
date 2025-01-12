@@ -38,3 +38,13 @@
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:39:35.698Z"}
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:39:35.698Z"}
 {"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-12T07:39:35.701Z"}
+{"level":"info","message":"Deleting article with seq: 4","timestamp":"2025-01-12T07:40:19.171Z"}
+{"level":"info","message":"Article deleted successfully: 4","timestamp":"2025-01-12T07:40:19.177Z"}
+{"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2735/","timestamp":"2025-01-12T07:40:23.790Z"}
+{"level":"info","message":"Article saved successfully: “기획자는 원래 혼자 성장해야 하나요?” | 요즘IT","timestamp":"2025-01-12T07:40:27.634Z"}
+{"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2923/","timestamp":"2025-01-12T07:40:43.258Z"}
+{"level":"info","message":"Article saved successfully: 2025년 이커머스 쇼핑 경험은 어떻게 달라질까? | 요즘IT","timestamp":"2025-01-12T07:40:49.759Z"}
+{"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2906/","timestamp":"2025-01-12T07:41:01.929Z"}
+{"level":"info","message":"Article saved successfully: CPO에게 신탁을 의뢰하지 마세요 | 요즘IT","timestamp":"2025-01-12T07:41:12.242Z"}
+{"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2899/","timestamp":"2025-01-12T07:41:15.022Z"}
+{"level":"info","message":"Article saved successfully: 요즘IT에 쓰는 100번째 글: “나도 개발자가 읽는 글을 쓰고 싶다!” | 요즘IT","timestamp":"2025-01-12T07:41:19.449Z"}
