@@ -18,3 +18,9 @@
 {"level":"info","message":"Initializing database at: /Users/choyoungpark/CascadeProjects/windsurf-project/newsletter-service/backend/data/newsletter.db","timestamp":"2025-01-12T08:14:07.029Z"}
 {"level":"info","message":"Server is running on port 8000 in development mode","timestamp":"2025-01-12T08:14:07.032Z"}
 {"level":"info","message":"Connected to SQLite database","timestamp":"2025-01-12T08:14:07.033Z"}
+{"level":"info","message":"Initializing database at: /Users/choyoungpark/CascadeProjects/windsurf-project/newsletter-service/backend/data/newsletter.db","timestamp":"2025-01-12T08:20:26.035Z"}
+{"level":"info","message":"Server is running on port 8000 in development mode","timestamp":"2025-01-12T08:20:26.038Z"}
+{"level":"info","message":"Connected to SQLite database","timestamp":"2025-01-12T08:20:26.038Z"}
+{"level":"info","message":"Initializing database at: /Users/choyoungpark/CascadeProjects/windsurf-project/newsletter-service/backend/data/newsletter.db","timestamp":"2025-01-12T08:23:52.117Z"}
+{"level":"info","message":"Server is running on port 8000 in development mode","timestamp":"2025-01-12T08:23:52.120Z"}
+{"level":"info","message":"Connected to SQLite database","timestamp":"2025-01-12T08:23:52.121Z"}

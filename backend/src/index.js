@@ -17,20 +17,22 @@ const PORT = process.env.PORT || 8000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const ALLOWED_ORIGINS = [
   'http://localhost:3000',
-  'https://newsletter-service-frontend.onrender.com'
+  'https://newsletter-service-frontend.onrender.com',
+  'https://newsletter-service-frontend.app',
+  'https://newsletter-service-zbmn.vercel.app',
+  'https://newsletter-service-*.vercel.app'
 ];
 
 // CORS 설정
 app.use(cors({
-  origin: function(origin, callback) {
-    if (!origin || ALLOWED_ORIGINS.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true
+  origin: ALLOWED_ORIGINS,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
+// 프리플라이트 요청을 위한 OPTIONS 핸들러
+app.options('*', cors());
 
 // 정적 파일 제공
 app.use(express.static('public'));
