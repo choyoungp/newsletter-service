@@ -70,14 +70,77 @@ async function initializeDatabase() {
   }
 }
 
+// 불용어 목록
+const STOP_WORDS = new Set([
+  // 조사
+  '이', '가', '을', '를', '의', '에', '에서', '로', '으로', '와', '과',
+  // 어미
+  '습니다', '입니다', '합니다', '했습니다', '있습니다', '었습니다', '됩니다',
+  '하는', '되는', '있는', '같은', '이런', '저런', '하고', '되고', '지고',
+  // 대명사
+  '저', '제', '내', '우리', '저희', '자신', '그', '이', '저', '그것', '이것',
+  // 일반적인 동사
+  '하다', '되다', '있다', '없다', '말하다', '보다', '가다', '오다', '주다',
+  // 일반적인 형용사
+  '좋다', '나쁘다', '크다', '작다', '많다', '적다', '어떻다', '이렇다',
+  // 부사
+  '매우', '너무', '아주', '잘', '더', '덜', '많이', '조금',
+  // 관형사
+  '이런', '저런', '그런', '어떤', '무슨',
+  // 접속사
+  '그리고', '하지만', '또는', '또한', '그러나', '따라서',
+  // 숫자와 단위
+  '하나', '둘', '셋', '첫', '두', '세', '네', '개', '명', '건', '개월', '년',
+  // 직함
+  '씨', '님', '대표', '사장', '부장', '과장', '대리', '사원',
+  // 일반적인 명사
+  '것', '등', '때', '곳', '군데', '사람', '경우', '가지', '때문', '생각',
+  '내용', '정도', '부분', '관련', '이상', '이하', '기준', '방법', '문제',
+  // 비즈니스 용어
+  '기획자', '개발자', '디자이너', '매니저', '프로젝트', '기업', '회사',
+  '서비스', '제품', '고객', '시장', '비즈니스', '전략', '목표', '계획',
+  // 시간 관련
+  '오늘', '내일', '모레', '어제', '그저께', '이번', '저번', '다음', '이전',
+  '현재', '과거', '미래', '최근', '요즘', '앞으로', '지금',
+  // 장소 관련
+  '여기', '저기', '거기', '어디', '국내', '해외', '지역', '장소'
+]);
+
 // 키워드 추출 함수
 function extractKeywords(text) {
-  // 간단한 키워드 추출 로직
-  const words = text.toLowerCase().split(/\s+/);
+  // 한글 단어 추출 (2글자 이상)
+  const koreanWordRegex = /[\uAC00-\uD7AF]{2,}/g;
+  const words = text.match(koreanWordRegex) || [];
+  
+  // 불용어 제거 및 빈도수 계산
   const keywordCount = {};
   
   words.forEach(word => {
-    if (word.length > 2) {  // 3글자 이상만 카운트
+    // 불용어가 아니고 2글자 이상인 경우만 카운트
+    if (!STOP_WORDS.has(word) && word.length >= 2) {
+      // 조사가 붙은 경우 처리
+      let cleanWord = word;
+      ['이', '가', '을', '를', '의', '에', '로'].forEach(postposition => {
+        if (word.endsWith(postposition) && word.length > postposition.length) {
+          cleanWord = word.slice(0, -postposition.length);
+        }
+      });
+      
+      // 2글자 이상인 경우만 추가
+      if (cleanWord.length >= 2) {
+        keywordCount[cleanWord] = (keywordCount[cleanWord] || 0) + 1;
+      }
+    }
+  });
+
+  // 영어/숫자 단어 추출 (알파벳 2자 이상)
+  const englishWordRegex = /[A-Za-z]{2,}|[A-Za-z]+\d+|\d+[A-Za-z]+/g;
+  const englishWords = text.match(englishWordRegex) || [];
+  
+  englishWords.forEach(word => {
+    const lowerWord = word.toLowerCase();
+    // 일반적인 영어 불용어 제외
+    if (!['the', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with'].includes(lowerWord)) {
       keywordCount[word] = (keywordCount[word] || 0) + 1;
     }
   });
@@ -85,7 +148,7 @@ function extractKeywords(text) {
   return Object.entries(keywordCount)
     .map(([keyword, frequency]) => ({ keyword, frequency }))
     .sort((a, b) => b.frequency - a.frequency)
-    .slice(0, 10);  // 상위 10개만 반환
+    .slice(0, 20);  // 상위 20개 키워드만 반환
 }
 
 // URL에서 도메인 추출

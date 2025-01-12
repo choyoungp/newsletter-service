@@ -32,3 +32,9 @@
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:35:34.682Z"}
 {"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:35:34.682Z"}
 {"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-12T07:35:34.684Z"}
+{"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2735/","timestamp":"2025-01-12T07:37:13.000Z"}
+{"level":"info","message":"Article saved successfully: “기획자는 원래 혼자 성장해야 하나요?” | 요즘IT","timestamp":"2025-01-12T07:37:16.739Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:39:35.699Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:39:35.698Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:39:35.698Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-12T07:39:35.701Z"}
