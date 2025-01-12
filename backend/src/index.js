@@ -1,11 +1,15 @@
-const express = require('express');
-const cors = require('cors');
-const sqlite3 = require('sqlite3').verbose();
-const { open } = require('sqlite');
-const puppeteer = require('puppeteer');
-const winston = require('winston');
-const path = require('path');
-const fs = require('fs');
+import express from 'express';
+import cors from 'cors';
+import sqlite3 from 'sqlite3';
+import winston from 'winston';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+import puppeteer from 'puppeteer';
+import { open } from 'sqlite';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -20,7 +24,6 @@ const ALLOWED_ORIGINS = [
 // CORS 설정
 app.use(cors({
   origin: function(origin, callback) {
-    // origin이 undefined인 경우는 같은 도메인에서의 요청
     if (!origin || ALLOWED_ORIGINS.includes(origin)) {
       callback(null, true);
     } else {
@@ -32,8 +35,13 @@ app.use(cors({
 
 // 정적 파일 제공
 app.use(express.static('public'));
-
 app.use(express.json());
+
+// 로그 디렉토리 생성
+const logDir = path.join(__dirname, '../logs');
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
 
 // 로깅 설정
 const logger = winston.createLogger({
@@ -44,8 +52,13 @@ const logger = winston.createLogger({
   ),
   transports: [
     new winston.transports.Console(),
-    new winston.transports.File({ filename: 'error.log', level: 'error' }),
-    new winston.transports.File({ filename: 'combined.log' })
+    new winston.transports.File({ 
+      filename: path.join(logDir, 'error.log'), 
+      level: 'error'
+    }),
+    new winston.transports.File({ 
+      filename: path.join(logDir, 'combined.log')
+    })
   ]
 });
 
