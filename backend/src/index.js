@@ -61,55 +61,48 @@ const logger = winston.createLogger({
   ]
 });
 
-// 데이터베이스 설정
-const DB_PATH = process.env.NODE_ENV === 'production' 
-  ? '/data/newsletter.db'
-  : path.join(__dirname, '../data/newsletter.db');
-
 // 데이터베이스 초기화
 async function initializeDatabase() {
+  const dbDir = process.env.NODE_ENV === 'production' ? './data' : path.join(__dirname, '../data');
+  
   try {
-    // 데이터 디렉토리 생성
-    const dataDir = path.dirname(DB_PATH);
-    if (!fs.existsSync(dataDir)) {
-      fs.mkdirSync(dataDir, { recursive: true });
+    // 상대 경로로 디렉토리 생성
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
     }
-
-    return new Promise((resolve, reject) => {
-      const db = new sqlite3.Database(DB_PATH, (err) => {
-        if (err) {
-          logger.error('Error connecting to database:', err);
-          reject(err);
-          return;
-        }
-        
-        logger.info('Connected to SQLite database');
-        
-        // 테이블 생성
-        db.serialize(() => {
-          // articles 테이블
-          db.run(`CREATE TABLE IF NOT EXISTS articles (
-            seq INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT UNIQUE,
-            title TEXT,
-            content TEXT,
-            domain TEXT,
-            date DATETIME DEFAULT CURRENT_TIMESTAMP
-          )`);
-
-          // keywords 테이블
-          db.run(`CREATE TABLE IF NOT EXISTS keywords (
-            seq INTEGER PRIMARY KEY AUTOINCREMENT,
-            article_seq INTEGER,
-            keyword TEXT,
-            frequency INTEGER,
-            FOREIGN KEY (article_seq) REFERENCES articles(seq) ON DELETE CASCADE
-          )`);
-
-          resolve(db);
-        });
-      });
+    
+    const dbPath = path.join(dbDir, 'newsletter.db');
+    logger.info(`Initializing database at: ${dbPath}`);
+    
+    const db = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        logger.error('Database connection error:', err);
+        throw err;
+      }
+      logger.info('Connected to SQLite database');
     });
+
+    // 테이블 생성
+    db.serialize(() => {
+      db.run(`CREATE TABLE IF NOT EXISTS articles (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        url TEXT UNIQUE,
+        title TEXT,
+        content TEXT,
+        domain TEXT,
+        date DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`);
+
+      db.run(`CREATE TABLE IF NOT EXISTS keywords (
+        seq INTEGER PRIMARY KEY AUTOINCREMENT,
+        article_seq INTEGER,
+        keyword TEXT,
+        frequency INTEGER,
+        FOREIGN KEY (article_seq) REFERENCES articles(seq) ON DELETE CASCADE
+      )`);
+    });
+
+    return db;
   } catch (error) {
     logger.error('Database initialization error:', error);
     throw error;

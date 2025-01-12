@@ -1,9 +1,9 @@
 services:
   - type: web
     name: newsletter-service-backend
-    env: node
-    buildCommand: npm install
-    startCommand: npm start
+    env: docker
+    buildCommand: docker build -t newsletter-service-backend .
+    startCommand: docker run -p $PORT:8000 -v $(pwd)/data:/app/data newsletter-service-backend
     envVars:
       - key: PORT
         value: 8000
@@ -11,13 +11,8 @@ services:
         value: production
     disk:
       name: data
-      mountPath: /data
+      mountPath: /app/data
       sizeGB: 1
-    buildFilter:
-      paths:
-        - backend/**
     plan: starter
     healthCheckPath: /api/health
     autoDeploy: true
-    dockerCommand: node src/index.js
-    dockerfilePath: Dockerfile

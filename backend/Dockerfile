@@ -20,9 +20,8 @@ RUN npm ci --only=production
 # Bundle app source
 COPY . .
 
-# Create data directory and set permissions
-RUN mkdir -p /data \
-    && chown -R pptruser:pptruser /data \
+# Create data directory with correct permissions
+RUN mkdir -p /app/data \
     && chown -R pptruser:pptruser /app
 
 # Run everything after as non-privileged user
