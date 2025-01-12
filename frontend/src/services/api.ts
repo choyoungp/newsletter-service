@@ -1,54 +1,40 @@
 import axios from 'axios';
-import { Article, TopKeyword, RelatedArticle, ApiResponse } from '../types';
 
-const API_BASE_URL = 'http://localhost:3000/api';
+interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+}
+
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const api = axios.create({
-  baseURL: API_BASE_URL,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
 export const articleApi = {
-  addArticle: async (url: string): Promise<ApiResponse<{ article: Article; keywords: TopKeyword[] }>> => {
-    const response = await api.post<ApiResponse<{ article: Article; keywords: TopKeyword[] }>>('/articles', { url });
+  addArticle: async (url: string): Promise<ApiResponse<any>> => {
+    const response = await api.post<ApiResponse<any>>('/api/articles', { url });
     return response.data;
   },
 
-  getRecentArticles: async (days: number = 7, limit: number = 10): Promise<ApiResponse<Article[]>> => {
-    const response = await api.get<ApiResponse<Article[]>>('/articles/recent', {
-      params: { days, limit },
-    });
-    return response.data;
-  },
-
-  searchArticles: async (params: {
-    keyword?: string;
-    startDate?: string;
-    endDate?: string;
-    limit?: number;
-  }): Promise<ApiResponse<Article[]>> => {
-    const response = await api.get<ApiResponse<Article[]>>('/articles/search', { params });
+  getRecentArticles: async (): Promise<ApiResponse<any>> => {
+    const response = await api.get<ApiResponse<any>>('/api/articles/recent');
     return response.data;
   },
 };
 
 export const keywordApi = {
-  getTopKeywords: async (days: number = 7): Promise<ApiResponse<TopKeyword[]>> => {
-    const response = await api.get<ApiResponse<TopKeyword[]>>('/keywords/top', {
-      params: { days },
-    });
+  getTopKeywords: async (): Promise<ApiResponse<any>> => {
+    const response = await api.get<ApiResponse<any>>('/api/keywords/top');
     return response.data;
   },
 
-  getRelatedArticles: async (
-    keyword: string,
-    limit: number = 5
-  ): Promise<ApiResponse<RelatedArticle[]>> => {
-    const response = await api.get<ApiResponse<RelatedArticle[]>>('/keywords/' + keyword + '/articles', {
-      params: { limit },
-    });
+  getRelatedArticles: async (keyword: string): Promise<ApiResponse<any>> => {
+    const response = await api.get<ApiResponse<any>>(`/api/keywords/${keyword}/articles`);
     return response.data;
   },
 };
