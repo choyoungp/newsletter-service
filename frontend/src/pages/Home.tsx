@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Button, Box, Card, CardContent, Grid } from '@mui/material';
+import { Container, Typography, TextField, Button, Box, Card, CardContent, Grid, CircularProgress, Alert } from '@mui/material';
 import { addArticle, getRecentArticles, getTopKeywords } from '../services/api';
 
 interface Article {
@@ -40,9 +40,9 @@ export default function Home() {
       if (response?.data) {
         setArticles(response.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching articles:', err);
-      setError('Failed to fetch articles');
+      setError(err?.response?.data?.message || 'Failed to fetch articles');
     }
   };
 
@@ -52,25 +52,33 @@ export default function Home() {
       if (response?.data) {
         setTopKeywords(response.data);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error('Error fetching keywords:', err);
-      setError('Failed to fetch keywords');
+      setError(err?.response?.data?.message || 'Failed to fetch keywords');
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!url) return;
+
     setLoading(true);
     setError('');
 
     try {
-      await addArticle(url);
-      setUrl('');
-      await fetchRecentArticles();
-      await fetchTopKeywords();
-    } catch (err) {
+      const response = await addArticle(url);
+      console.log('Add article response:', response);
+      
+      if (response?.success) {
+        setUrl('');
+        await fetchRecentArticles();
+        await fetchTopKeywords();
+      } else {
+        throw new Error(response?.message || 'Failed to add article');
+      }
+    } catch (err: any) {
       console.error('Error adding article:', err);
-      setError('Failed to add article');
+      setError(err?.response?.data?.message || err.message || 'Failed to add article');
     } finally {
       setLoading(false);
     }
@@ -92,6 +100,8 @@ export default function Home() {
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 disabled={loading}
+                error={!!error}
+                helperText={error}
               />
             </Grid>
             <Grid item xs={12} sm={3}>
@@ -102,16 +112,16 @@ export default function Home() {
                 disabled={loading || !url}
                 sx={{ height: '56px' }}
               >
-                {loading ? 'Adding...' : 'Add Article'}
+                {loading ? <CircularProgress size={24} /> : 'Add Article'}
               </Button>
             </Grid>
           </Grid>
         </form>
 
         {error && (
-          <Typography color="error" sx={{ mt: 2 }}>
+          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError('')}>
             {error}
-          </Typography>
+          </Alert>
         )}
 
         <Grid container spacing={4} sx={{ mt: 4 }}>
