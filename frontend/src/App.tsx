@@ -1,6 +1,7 @@
-import { CssBaseline, ThemeProvider, createTheme } from '@mui/material';
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import { AppBar, Toolbar, Typography, Button, Container } from '@mui/material';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, CssBaseline, AppBar, Toolbar, Typography, Button, createTheme } from '@mui/material';
+import theme from './theme';
 import Home from './pages/Home';
 import Admin from './pages/Admin';
 

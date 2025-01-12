@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { 
   Container, Typography, TextField, Button, 
   List, ListItem, ListItemText, CircularProgress,
-  Alert, IconButton, ListItemSecondary, Dialog,
-  DialogTitle, DialogContent, DialogActions, Grid, Card, CardContent, Box
+  Alert, IconButton, Dialog,
+  DialogTitle, DialogContent, DialogActions, Grid
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { addArticle, getRecentArticles, getTopKeywords, deleteArticle } from '../services/api';
@@ -97,6 +97,25 @@ export default function Home() {
     }
   };
 
+  if (loading) {
+    return (
+      <Container sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container sx={{ mt: 4 }}>
+        <Typography color="error">{error}</Typography>
+        <Button onClick={() => window.location.reload()} variant="contained" sx={{ mt: 2 }}>
+          Retry
+        </Button>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -124,12 +143,6 @@ export default function Home() {
         </Button>
       </form>
 
-      {error && (
-        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError(null)}>
-          {error}
-        </Alert>
-      )}
-
       <Grid container spacing={4} sx={{ mt: 4 }}>
         <Grid item xs={12} md={8}>
           <Typography variant="h5" gutterBottom>
@@ -151,14 +164,22 @@ export default function Home() {
                 }
               >
                 <ListItemText
-                  primary={article.title}
+                  primary={
+                    <Typography variant="h6">
+                      <a href={article.url} target="_blank" rel="noopener noreferrer" 
+                         style={{ textDecoration: 'none', color: 'inherit' }}>
+                        {article.title}
+                      </a>
+                    </Typography>
+                  }
                   secondary={
                     <>
-                      <Typography component="span" variant="body2" color="text.primary">
-                        {article.domain} - {new Date(article.date).toLocaleDateString()}
+                      <Typography variant="body2" color="text.secondary">
+                        도메인: {article.domain}
                       </Typography>
-                      <br />
-                      {article.keywords.slice(0, 5).map(k => k.keyword).join(', ')}
+                      <Typography variant="body2" color="text.secondary">
+                        키워드: {article.keywords.slice(0, 5).map(k => k.keyword).join(', ') || '없음'}
+                      </Typography>
                     </>
                   }
                 />
