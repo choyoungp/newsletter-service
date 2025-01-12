@@ -104,7 +104,7 @@ export default function Admin() {
     }
   };
 
-  const handleChangePage = (newPage: number) => {
+  const handleChangePage = (_: any, newPage: number) => {
     setPage(newPage);
   };
 

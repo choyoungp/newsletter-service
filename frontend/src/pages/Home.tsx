@@ -3,7 +3,7 @@ import {
   Container, Typography, TextField, Button, 
   List, ListItem, ListItemText, CircularProgress,
   Alert, IconButton, Dialog,
-  DialogTitle, DialogContent, DialogActions, Grid
+  DialogTitle, DialogContent, DialogActions, Grid, Paper
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { addArticle, getRecentArticles, getTopKeywords, deleteArticle } from '../services/api';
@@ -148,44 +148,46 @@ export default function Home() {
           <Typography variant="h5" gutterBottom>
             Recent Articles
           </Typography>
-          <List>
-            {articles.map((article) => (
-              <ListItem
-                key={article.seq}
-                divider
-                secondaryAction={
-                  <IconButton 
-                    edge="end" 
-                    aria-label="delete"
-                    onClick={() => handleDeleteClick(article)}
-                  >
-                    <DeleteIcon />
-                  </IconButton>
-                }
-              >
-                <ListItemText
-                  primary={
-                    <Typography variant="h6">
-                      <a href={article.url} target="_blank" rel="noopener noreferrer" 
-                         style={{ textDecoration: 'none', color: 'inherit' }}>
-                        {article.title}
-                      </a>
-                    </Typography>
+          <Paper elevation={2}>
+            <List>
+              {articles.map((article) => (
+                <ListItem
+                  key={article.seq}
+                  divider
+                  secondaryAction={
+                    <IconButton 
+                      edge="end" 
+                      aria-label="delete"
+                      onClick={() => handleDeleteClick(article)}
+                    >
+                      <DeleteIcon />
+                    </IconButton>
                   }
-                  secondary={
-                    <>
-                      <Typography variant="body2" color="text.secondary">
-                        도메인: {article.domain}
+                >
+                  <ListItemText
+                    primary={
+                      <Typography variant="h6">
+                        <a href={article.url} target="_blank" rel="noopener noreferrer" 
+                           style={{ textDecoration: 'none', color: 'inherit' }}>
+                          {article.title}
+                        </a>
                       </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        키워드: {article.keywords.slice(0, 5).map(k => k.keyword).join(', ') || '없음'}
-                      </Typography>
-                    </>
-                  }
-                />
-              </ListItem>
-            ))}
-          </List>
+                    }
+                    secondary={
+                      <>
+                        <Typography variant="body2" color="text.secondary">
+                          도메인: {article.domain}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          키워드: {article.keywords.slice(0, 5).map(k => k.keyword).join(', ') || '없음'}
+                        </Typography>
+                      </>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          </Paper>
         </Grid>
 
         <Grid item xs={12} md={4}>
