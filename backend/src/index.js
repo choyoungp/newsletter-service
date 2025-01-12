@@ -311,6 +311,147 @@ app.get('/api/keywords/top', async (req, res) => {
   }
 });
 
+// 모든 기사 조회 API (페이지네이션 포함)
+app.get('/api/admin/articles', async (req, res) => {
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const offset = (page - 1) * limit;
+  
+  try {
+    // 전체 기사 수 조회
+    const countResult = await db.get('SELECT COUNT(*) as total FROM articles');
+    const total = countResult.total;
+
+    // 기사 목록 조회
+    const articles = await db.all(`
+      SELECT 
+        a.*,
+        json_group_array(
+          json_object(
+            'keyword', k.keyword,
+            'frequency', k.frequency
+          )
+        ) as keywords,
+        (SELECT COUNT(*) FROM keywords WHERE article_seq = a.seq) as keyword_count,
+        length(content) as content_length
+      FROM articles a
+      LEFT JOIN keywords k ON a.seq = k.article_seq
+      GROUP BY a.seq
+      ORDER BY a.date DESC
+      LIMIT ? OFFSET ?
+    `, [limit, offset]);
+
+    // keywords 문자열을 JSON으로 파싱
+    const processedArticles = articles.map(article => ({
+      ...article,
+      keywords: JSON.parse(article.keywords)
+    }));
+
+    res.json({
+      success: true,
+      data: {
+        articles: processedArticles,
+        pagination: {
+          total,
+          page,
+          limit,
+          totalPages: Math.ceil(total / limit)
+        }
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching admin articles:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error fetching admin articles'
+    });
+  }
+});
+
+// 기사 상세 정보 조회 API
+app.get('/api/admin/articles/:seq', async (req, res) => {
+  const { seq } = req.params;
+  
+  try {
+    const article = await db.get(`
+      SELECT 
+        a.*,
+        json_group_array(
+          json_object(
+            'keyword', k.keyword,
+            'frequency', k.frequency
+          )
+        ) as keywords
+      FROM articles a
+      LEFT JOIN keywords k ON a.seq = k.article_seq
+      WHERE a.seq = ?
+      GROUP BY a.seq
+    `, [seq]);
+
+    if (!article) {
+      return res.status(404).json({
+        success: false,
+        message: 'Article not found'
+      });
+    }
+
+    // keywords 문자열을 JSON으로 파싱
+    article.keywords = JSON.parse(article.keywords);
+
+    res.json({
+      success: true,
+      data: article
+    });
+  } catch (error) {
+    logger.error('Error fetching article details:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error fetching article details'
+    });
+  }
+});
+
+// 크롤링 통계 조회 API
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    const stats = await db.all(`
+      SELECT
+        COUNT(*) as total_articles,
+        COUNT(DISTINCT domain) as unique_domains,
+        (SELECT COUNT(*) FROM keywords) as total_keywords,
+        (SELECT COUNT(DISTINCT keyword) FROM keywords) as unique_keywords,
+        (SELECT AVG(frequency) FROM keywords) as avg_keyword_frequency,
+        (SELECT domain FROM articles GROUP BY domain ORDER BY COUNT(*) DESC LIMIT 1) as top_domain,
+        (SELECT keyword FROM keywords GROUP BY keyword ORDER BY SUM(frequency) DESC LIMIT 1) as top_keyword
+      FROM articles
+    `);
+
+    // 시간대별 크롤링 통계
+    const hourlyStats = await db.all(`
+      SELECT 
+        strftime('%H', date) as hour,
+        COUNT(*) as count
+      FROM articles
+      GROUP BY hour
+      ORDER BY hour
+    `);
+
+    res.json({
+      success: true,
+      data: {
+        ...stats[0],
+        hourlyStats
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching admin stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error fetching admin stats'
+    });
+  }
+});
+
 // 서버 시작
 initializeDatabase()
   .then(() => {

@@ -22,3 +22,13 @@
 {"level":"info","message":"Article deleted successfully: 1","timestamp":"2025-01-12T07:31:55.393Z"}
 {"level":"info","message":"Processing article from URL: https://yozm.wishket.com/magazine/detail/2735/","timestamp":"2025-01-12T07:31:58.897Z"}
 {"level":"info","message":"Article saved successfully: “기획자는 원래 혼자 성장해야 하나요?” | 요즘IT","timestamp":"2025-01-12T07:32:02.367Z"}
+{"level":"info","message":"Processing article from URL: https://www.zdnet.co.kr/view/?no=20240112134903","timestamp":"2025-01-12T07:33:36.626Z"}
+{"level":"info","message":"Article saved successfully: IT세상을 바꾸는 힘 지디넷코리아","timestamp":"2025-01-12T07:33:40.079Z"}
+{"level":"info","message":"Deleting article with seq: 3","timestamp":"2025-01-12T07:34:31.521Z"}
+{"level":"info","message":"Article deleted successfully: 3","timestamp":"2025-01-12T07:34:31.525Z"}
+{"level":"info","message":"Deleting article with seq: 2","timestamp":"2025-01-12T07:34:33.835Z"}
+{"level":"info","message":"Article deleted successfully: 2","timestamp":"2025-01-12T07:34:33.838Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:35:34.682Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:35:34.682Z"}
+{"level":"info","message":"Database initialized successfully","timestamp":"2025-01-12T07:35:34.682Z"}
+{"level":"info","message":"Server is running on port 3000","timestamp":"2025-01-12T07:35:34.684Z"}
