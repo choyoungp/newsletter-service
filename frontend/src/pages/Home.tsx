@@ -6,7 +6,6 @@ import {
   DialogTitle, DialogContent, DialogActions, Grid, Paper
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import { addArticle, getRecentArticles, getTopKeywords, deleteArticle } from '../services/api';
 
 interface Article {
   seq: number;
@@ -39,19 +38,35 @@ export default function Home() {
 
   const fetchArticles = async () => {
     try {
-      const response = await getRecentArticles();
-      setArticles(response.data);
-    } catch (error: any) {
-      console.error('Error fetching articles:', error);
+      const response = await fetch('/api/articles/recent');
+      if (!response.ok) {
+        throw new Error('Failed to fetch articles');
+      }
+      const data = await response.json();
+      setArticles(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load articles');
+      console.error('Error fetching articles:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const fetchKeywords = async () => {
     try {
-      const response = await getTopKeywords();
-      setKeywords(response.data);
-    } catch (error: any) {
-      console.error('Error fetching keywords:', error);
+      const response = await fetch('/api/keywords/top');
+      if (!response.ok) {
+        throw new Error('Failed to fetch keywords');
+      }
+      const data = await response.json();
+      setKeywords(data);
+      setError(null);
+    } catch (err) {
+      setError('Failed to load keywords');
+      console.error('Error fetching keywords:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -61,13 +76,20 @@ export default function Home() {
     setError(null);
 
     try {
-      await addArticle(url);
+      const response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to add article');
+      }
       setUrl('');
       await fetchArticles();
       await fetchKeywords();
-    } catch (error: any) {
-      console.error('Error adding article:', error);
-      setError(error.message || 'An error occurred');
+    } catch (err) {
+      setError('Failed to add article');
+      console.error('Error adding article:', err);
     } finally {
       setLoading(false);
     }
@@ -85,13 +107,18 @@ export default function Home() {
     setError(null);
     
     try {
-      await deleteArticle(articleToDelete.seq);
+      const response = await fetch(`/api/articles/${articleToDelete.seq}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) {
+        throw new Error('Failed to delete article');
+      }
       await fetchArticles();
       await fetchKeywords();
       setDeleteDialogOpen(false);
-    } catch (error: any) {
-      console.error('Error deleting article:', error);
-      setError(error.message || 'An error occurred while deleting the article');
+    } catch (err) {
+      setError('Failed to delete article');
+      console.error('Error deleting article:', err);
     } finally {
       setLoading(false);
     }
