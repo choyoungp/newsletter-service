@@ -12,7 +12,7 @@ const port = process.env.PORT || 3000;
 // CORS 설정
 app.use(cors({
   origin: ['https://newsletter-service-zbmn.vercel.app', 'http://localhost:5173'],
-  methods: ['GET', 'POST'],
+  methods: ['GET', 'POST', 'DELETE'],
   credentials: true
 }));
 
@@ -190,6 +190,41 @@ app.post('/api/articles', async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Error processing article'
+    });
+  }
+});
+
+// 기사 삭제 API
+app.delete('/api/articles/:seq', async (req, res) => {
+  const { seq } = req.params;
+  
+  try {
+    logger.info(`Deleting article with seq: ${seq}`);
+
+    // 먼저 연관된 키워드 삭제
+    await db.run('DELETE FROM keywords WHERE article_seq = ?', [seq]);
+    
+    // 그 다음 기사 삭제
+    const result = await db.run('DELETE FROM articles WHERE seq = ?', [seq]);
+    
+    if (result.changes === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Article not found'
+      });
+    }
+
+    logger.info(`Article deleted successfully: ${seq}`);
+    
+    res.json({
+      success: true,
+      message: 'Article deleted successfully'
+    });
+  } catch (error) {
+    logger.error('Error deleting article:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error deleting article'
     });
   }
 });

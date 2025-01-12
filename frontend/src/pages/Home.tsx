@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, TextField, Button, Box, Card, CardContent, Grid, CircularProgress, Alert } from '@mui/material';
-import { addArticle, getRecentArticles, getTopKeywords } from '../services/api';
+import { 
+  Container, Typography, TextField, Button, 
+  List, ListItem, ListItemText, CircularProgress,
+  Alert, IconButton, ListItemSecondary, Dialog,
+  DialogTitle, DialogContent, DialogActions, Grid, Card, CardContent, Box
+} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { addArticle, getRecentArticles, getTopKeywords, deleteArticle } from '../services/api';
 
 interface Article {
   seq: number;
@@ -8,181 +14,193 @@ interface Article {
   title: string;
   date: string;
   domain: string;
-  keywords: Array<{
-    keyword: string;
-    frequency: number;
-  }>;
+  keywords: Array<{ keyword: string; frequency: number }>;
+}
+
+interface Keyword {
+  keyword: string;
+  total_frequency: number;
+  related_articles: Array<{ title: string; url: string; date: string }>;
 }
 
 export default function Home() {
   const [url, setUrl] = useState('');
-  const [articles, setArticles] = useState<Article[]>([]);
-  const [topKeywords, setTopKeywords] = useState<Array<{
-    keyword: string;
-    total_frequency: number;
-    related_articles: Array<{
-      title: string;
-      url: string;
-      date: string;
-    }>;
-  }>>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [keywords, setKeywords] = useState<Keyword[]>([]);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [articleToDelete, setArticleToDelete] = useState<Article | null>(null);
 
   useEffect(() => {
-    fetchRecentArticles();
-    fetchTopKeywords();
+    fetchArticles();
+    fetchKeywords();
   }, []);
 
-  const fetchRecentArticles = async () => {
+  const fetchArticles = async () => {
     try {
       const response = await getRecentArticles();
-      if (response?.data) {
-        setArticles(response.data);
-      }
-    } catch (err: any) {
-      console.error('Error fetching articles:', err);
-      setError(err?.response?.data?.message || 'Failed to fetch articles');
+      setArticles(response.data);
+    } catch (error: any) {
+      console.error('Error fetching articles:', error);
     }
   };
 
-  const fetchTopKeywords = async () => {
+  const fetchKeywords = async () => {
     try {
       const response = await getTopKeywords();
-      if (response?.data) {
-        setTopKeywords(response.data);
-      }
-    } catch (err: any) {
-      console.error('Error fetching keywords:', err);
-      setError(err?.response?.data?.message || 'Failed to fetch keywords');
+      setKeywords(response.data);
+    } catch (error: any) {
+      console.error('Error fetching keywords:', error);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!url) return;
-
     setLoading(true);
-    setError('');
+    setError(null);
 
     try {
-      const response = await addArticle(url);
-      console.log('Add article response:', response);
-      
-      if (response?.success) {
-        setUrl('');
-        await fetchRecentArticles();
-        await fetchTopKeywords();
-      } else {
-        throw new Error(response?.message || 'Failed to add article');
-      }
-    } catch (err: any) {
-      console.error('Error adding article:', err);
-      setError(err?.response?.data?.message || err.message || 'Failed to add article');
+      await addArticle(url);
+      setUrl('');
+      await fetchArticles();
+      await fetchKeywords();
+    } catch (error: any) {
+      console.error('Error adding article:', error);
+      setError(error.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteClick = (article: Article) => {
+    setArticleToDelete(article);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!articleToDelete) return;
+    
+    setLoading(true);
+    setError(null);
+    
+    try {
+      await deleteArticle(articleToDelete.seq);
+      await fetchArticles();
+      await fetchKeywords();
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      console.error('Error deleting article:', error);
+      setError(error.message || 'An error occurred while deleting the article');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <Container maxWidth="lg">
-      <Box sx={{ my: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Newsletter Service
-        </Typography>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Typography variant="h4" component="h1" gutterBottom>
+        Newsletter Service
+      </Typography>
 
-        <form onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            <Grid item xs={12} sm={9}>
-              <TextField
-                fullWidth
-                label="Article URL"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={loading}
-                error={!!error}
-                helperText={error}
-              />
-            </Grid>
-            <Grid item xs={12} sm={3}>
-              <Button
-                fullWidth
-                variant="contained"
-                type="submit"
-                disabled={loading || !url}
-                sx={{ height: '56px' }}
-              >
-                {loading ? <CircularProgress size={24} /> : 'Add Article'}
-              </Button>
-            </Grid>
-          </Grid>
-        </form>
+      <form onSubmit={handleSubmit} style={{ marginBottom: 24 }}>
+        <TextField
+          fullWidth
+          label="Article URL"
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          error={!!error}
+          helperText={error}
+          disabled={loading}
+          sx={{ mb: 2 }}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          disabled={loading || !url}
+          startIcon={loading && <CircularProgress size={20} color="inherit" />}
+        >
+          Add Article
+        </Button>
+      </form>
 
-        {error && (
-          <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError('')}>
-            {error}
-          </Alert>
-        )}
+      {error && (
+        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
 
-        <Grid container spacing={4} sx={{ mt: 4 }}>
-          <Grid item xs={12} md={8}>
-            <Typography variant="h5" gutterBottom>
-              Recent Articles
-            </Typography>
+      <Grid container spacing={4} sx={{ mt: 4 }}>
+        <Grid item xs={12} md={8}>
+          <Typography variant="h5" gutterBottom>
+            Recent Articles
+          </Typography>
+          <List>
             {articles.map((article) => (
-              <Card key={article.seq} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {article.title}
-                  </Typography>
-                  <Typography color="text.secondary" gutterBottom>
-                    {new Date(article.date).toLocaleDateString()}
-                  </Typography>
-                  <Typography variant="body2" component="p">
-                    Keywords: {article.keywords.map(k => k.keyword).join(', ')}
-                  </Typography>
-                  <Button
-                    href={article.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    sx={{ mt: 1 }}
+              <ListItem
+                key={article.seq}
+                divider
+                secondaryAction={
+                  <IconButton 
+                    edge="end" 
+                    aria-label="delete"
+                    onClick={() => handleDeleteClick(article)}
                   >
-                    Read More
-                  </Button>
-                </CardContent>
-              </Card>
+                    <DeleteIcon />
+                  </IconButton>
+                }
+              >
+                <ListItemText
+                  primary={article.title}
+                  secondary={
+                    <>
+                      <Typography component="span" variant="body2" color="text.primary">
+                        {article.domain} - {new Date(article.date).toLocaleDateString()}
+                      </Typography>
+                      <br />
+                      {article.keywords.slice(0, 5).map(k => k.keyword).join(', ')}
+                    </>
+                  }
+                />
+              </ListItem>
             ))}
-          </Grid>
-
-          <Grid item xs={12} md={4}>
-            <Typography variant="h5" gutterBottom>
-              Top Keywords
-            </Typography>
-            {topKeywords.map((keyword) => (
-              <Card key={keyword.keyword} sx={{ mb: 2 }}>
-                <CardContent>
-                  <Typography variant="h6" component="h2">
-                    {keyword.keyword}
-                  </Typography>
-                  <Typography color="text.secondary" gutterBottom>
-                    Frequency: {keyword.total_frequency}
-                  </Typography>
-                  <Typography variant="body2" component="p">
-                    Related Articles:
-                  </Typography>
-                  {keyword.related_articles.map((article, index) => (
-                    <Typography key={index} variant="body2" component="p">
-                      • <a href={article.url} target="_blank" rel="noopener noreferrer">
-                          {article.title}
-                        </a>
-                    </Typography>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-          </Grid>
+          </List>
         </Grid>
-      </Box>
+
+        <Grid item xs={12} md={4}>
+          <Typography variant="h5" gutterBottom>
+            Top Keywords
+          </Typography>
+          <List>
+            {keywords.map((keyword) => (
+              <ListItem key={keyword.keyword} divider>
+                <ListItemText
+                  primary={`${keyword.keyword} (${keyword.total_frequency})`}
+                  secondary={
+                    keyword.related_articles.slice(0, 3).map(article => article.title).join(', ')
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </Grid>
+      </Grid>
+
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle>Delete Article</DialogTitle>
+        <DialogContent>
+          Are you sure you want to delete "{articleToDelete?.title}"?
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleDeleteConfirm} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 }

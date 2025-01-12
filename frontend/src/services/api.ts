@@ -92,3 +92,19 @@ export const getRelatedArticles = async (keyword: string): Promise<ApiResponse<a
     throw new Error(error.message || 'Network error occurred');
   }
 };
+
+export const deleteArticle = async (seq: number): Promise<ApiResponse<any>> => {
+  try {
+    const response = await api.delete<ApiResponse<any>>(`/api/articles/${seq}`);
+    return response.data;
+  } catch (error: any) {
+    console.error('API Error:', error);
+    if (error.response) {
+      throw error.response.data;
+    }
+    if (error.code === 'ECONNABORTED') {
+      throw new Error('Server is starting up, please try again in a moment...');
+    }
+    throw new Error(error.message || 'Network error occurred');
+  }
+};
