@@ -209,9 +209,61 @@ function extractDomain(url) {
   }
 }
 
-// 상태 확인 엔드포인트
+// Puppeteer 브라우저 설정
+async function initBrowser() {
+  return await puppeteer.launch({
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-dev-shm-usage',
+      '--disable-accelerated-2d-canvas',
+      '--disable-gpu',
+      '--window-size=1920x1080'
+    ],
+    headless: 'new',
+    executablePath: process.env.NODE_ENV === 'production'
+      ? '/usr/bin/google-chrome'
+      : puppeteer.executablePath()
+  });
+}
+
+// 기사 크롤링 함수
+async function crawlArticle(url) {
+  const browser = await initBrowser();
+  try {
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1920, height: 1080 });
+    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
+    
+    await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+    
+    // 제목과 내용 추출
+    const title = await page.evaluate(() => {
+      const titleElement = document.querySelector('h1, .article-title, .entry-title');
+      return titleElement ? titleElement.textContent.trim() : '';
+    });
+    
+    const content = await page.evaluate(() => {
+      const contentElement = document.querySelector('article, .article-content, .entry-content');
+      return contentElement ? contentElement.textContent.trim() : '';
+    });
+    
+    return { title, content };
+  } catch (error) {
+    logger.error('Error crawling article:', error);
+    throw error;
+  } finally {
+    await browser.close();
+  }
+}
+
+// 헬스 체크 엔드포인트
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
 });
 
 // 기사 추가 API
@@ -228,38 +280,8 @@ app.post('/api/articles', async (req, res) => {
   try {
     logger.info(`Processing article from URL: ${url}`);
 
-    // Puppeteer로 웹 페이지 스크래핑
-    const browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-gpu',
-        '--window-size=1920x1080'
-      ]
-    });
-    
-    const page = await browser.newPage();
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36');
-    
-    try {
-      await page.goto(url, { 
-        waitUntil: 'networkidle0',
-        timeout: 30000
-      });
-    } catch (error) {
-      logger.error('Error loading page:', error);
-      await browser.close();
-      throw new Error('Failed to load the page. Please check the URL and try again.');
-    }
-
-    const title = await page.title();
-    const content = await page.evaluate(() => document.body.innerText);
+    const { title, content } = await crawlArticle(url);
     const domain = extractDomain(url);
-
-    await browser.close();
 
     // 키워드 추출
     const keywords = extractKeywords(content);

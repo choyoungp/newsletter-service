@@ -13,3 +13,11 @@ services:
       name: data
       mountPath: /data
       sizeGB: 1
+    buildFilter:
+      paths:
+        - backend/**
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: true
+    dockerCommand: node src/index.js
+    dockerfilePath: Dockerfile
